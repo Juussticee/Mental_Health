@@ -1,0 +1,449 @@
+468:const EditMealForm = ({ meal, onClose }: { meal: Meal, onClose: () => void }) => {
+469-  const [ingredients, setIngredients] = useState(
+470-    meal.ingredients.map(ing => ({
+471-      name: ing.name,
+472-      quantity: ing.quantity,
+473-      calories: ing.calories,
+474-      cookingMethod: ing.cookingMethod || "Raw"
+475-    }))
+476-  );
+477-  
+478-  const form = useForm<MealFormValues>({
+479-    resolver: zodResolver(addMealSchema),
+480-    defaultValues: {
+481-      name: meal.name,
+482-      mealType: meal.mealType,
+483-      date: meal.date,
+484-      time: meal.time,
+485-      inputMethod: "ingredients",
+486-      ingredients: meal.ingredients.map(ing => ({
+487-        name: ing.name,
+488-        quantity: ing.quantity,
+489-        calories: ing.calories,
+490-        cookingMethod: ing.cookingMethod || "Raw"
+491-      })),
+492-      recipe: {
+493-        name: "",
+494-        servingSize: "",
+495-        calories: 0
+496-      }
+497-    },
+498-  });
+499-
+500-  const inputMethod = form.watch("inputMethod");
+501-  
+502-  const addIngredient = () => {
+503-    setIngredients([...ingredients, { ...defaultIngredient }]);
+504-    const currentIngredients = form.getValues("ingredients") || [];
+505-    form.setValue("ingredients", [...currentIngredients, { ...defaultIngredient }]);
+506-  };
+507-  
+508-  const removeIngredient = (index: number) => {
+509-    const updatedIngredients = [...ingredients];
+510-    updatedIngredients.splice(index, 1);
+511-    setIngredients(updatedIngredients);
+512-    form.setValue("ingredients", updatedIngredients);
+513-  };
+514-  
+515-  const onSubmit = (values: MealFormValues) => {
+516-    console.log("Form updated:", values);
+517-    // Here you would normally update the meal via API
+518-    onClose();
+519-  };
+520-  
+521-  // Set the button text appropriately for editing
+522-
+523-  return (
+524-    <Form {...form}>
+525-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+526-        <FormField
+527-          control={form.control}
+528-          name="name"
+529-          render={({ field }) => (
+530-            <FormItem>
+531-              <FormLabel>Meal Name</FormLabel>
+532-              <FormControl>
+533-                <Input placeholder="Enter meal name" {...field} />
+534-              </FormControl>
+535-              <FormMessage />
+536-            </FormItem>
+537-          )}
+538-        />
+539-        
+540-        <div className="grid grid-cols-2 gap-4">
+541-          <FormField
+542-            control={form.control}
+543-            name="mealType"
+544-            render={({ field }) => (
+545-              <FormItem>
+546-                <FormLabel>Meal Type</FormLabel>
+547-                <Select
+548-                  onValueChange={field.onChange}
+549-                  defaultValue={field.value}
+550-                >
+551-                  <FormControl>
+552-                    <SelectTrigger>
+553-                      <SelectValue placeholder="Select meal type" />
+554-                    </SelectTrigger>
+555-                  </FormControl>
+556-                  <SelectContent>
+557-                    {mealTypes.map((type) => (
+558-                      <SelectItem key={type} value={type}>
+559-                        {type}
+560-                      </SelectItem>
+561-                    ))}
+562-                  </SelectContent>
+563-                </Select>
+564-                <FormMessage />
+565-              </FormItem>
+566-            )}
+567-          />
+568-          
+569-          <FormField
+570-            control={form.control}
+571-            name="time"
+572-            render={({ field }) => (
+573-              <FormItem>
+574-                <FormLabel>Time</FormLabel>
+575-                <FormControl>
+576-                  <Input type="time" {...field} />
+577-                </FormControl>
+578-                <FormMessage />
+579-              </FormItem>
+580-            )}
+581-          />
+582-        </div>
+583-        
+584-        <FormField
+585-          control={form.control}
+586-          name="date"
+587-          render={({ field }) => (
+588-            <FormItem>
+589-              <FormLabel>Date</FormLabel>
+590-              <FormControl>
+591-                <Input type="date" {...field} />
+592-              </FormControl>
+593-              <FormMessage />
+594-            </FormItem>
+595-          )}
+596-        />
+597-        
+598-        <FormField
+599-          control={form.control}
+600-          name="inputMethod"
+601-          render={({ field }) => (
+602-            <FormItem>
+603-              <FormLabel>Add meal by</FormLabel>
+604-              <div className="flex space-x-4">
+605-                <FormControl>
+606-                  <div className="grid grid-cols-2 gap-2">
+607-                    <label 
+608-                      className={`flex items-center justify-center px-3 py-2 border rounded-md text-sm cursor-pointer ${field.value === 'ingredients' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-300'}`} 
+609-                      onClick={() => field.onChange("ingredients")}
+610-                    >
+611-                      Ingredients
+612-                    </label>
+613-                    <label 
+614-                      className={`flex items-center justify-center px-3 py-2 border rounded-md text-sm cursor-pointer ${field.value === 'recipe' ? 'border-primary bg-primary/10 text-primary' : 'border-gray-300'}`} 
+615-                      onClick={() => field.onChange("recipe")}
+616-                    >
+617-                      Recipe
+618-                    </label>
+619-                  </div>
+620-                </FormControl>
+621-              </div>
+622-            </FormItem>
+623-          )}
+624-        />
+625-        
+626-        {inputMethod === "ingredients" && (
+627-          <div className="space-y-4">
+628-            <div className="flex items-center justify-between">
+629-              <h3 className="text-sm font-medium">Ingredients</h3>
+630-              <Button type="button" variant="outline" size="sm" onClick={addIngredient}>
+631-                <Plus className="h-4 w-4 mr-2" />
+632-                Add Ingredient
+633-              </Button>
+634-            </div>
+635-            
+636-            {ingredients.map((_, index) => (
+637-              <div key={index} className="p-3 border rounded-md">
+638-                <div className="flex justify-between items-center mb-2">
+639-                  <h4 className="text-sm font-medium">Ingredient {index + 1}</h4>
+640-                  {ingredients.length > 1 && (
+641-                    <Button 
+642-                      type="button" 
+643-                      variant="ghost" 
+644-                      size="sm" 
+645-                      className="text-red-500 h-8 px-2"
+646-                      onClick={() => removeIngredient(index)}
+647-                    >
+648-                      Remove
+649-                    </Button>
+650-                  )}
+651-                </div>
+652-                
+653-                <div className="grid grid-cols-2 gap-3">
+654-                  <FormField
+655-                    control={form.control}
+656-                    name={`ingredients.${index}.name`}
+657-                    render={({ field }) => (
+658-                      <FormItem>
+659-                        <FormLabel className="text-xs">Name</FormLabel>
+660-                        <FormControl>
+661-                          <Input placeholder="e.g., Chicken breast" {...field} />
+662-                        </FormControl>
+663-                        <FormMessage />
+664-                      </FormItem>
+665-                    )}
+666-                  />
+667-                  
+668-                  <FormField
+669-                    control={form.control}
+670-                    name={`ingredients.${index}.quantity`}
+671-                    render={({ field }) => (
+672-                      <FormItem>
+673-                        <FormLabel className="text-xs">Quantity</FormLabel>
+674-                        <FormControl>
+675-                          <Input placeholder="e.g., 100g" {...field} />
+676-                        </FormControl>
+677-                        <FormMessage />
+678-                      </FormItem>
+679-                    )}
+680-                  />
+681-                </div>
+682-                
+683-                <div className="grid grid-cols-2 gap-3 mt-3">
+684-                  <FormField
+685-                    control={form.control}
+686-                    name={`ingredients.${index}.cookingMethod`}
+687-                    render={({ field }) => (
+688-                      <FormItem>
+689-                        <FormLabel className="text-xs">Cooking Method</FormLabel>
+690-                        <Select
+691-                          onValueChange={field.onChange}
+692-                          defaultValue={field.value}
+693-                        >
+694-                          <FormControl>
+695-                            <SelectTrigger>
+696-                              <SelectValue placeholder="Select method" />
+697-                            </SelectTrigger>
+698-                          </FormControl>
+699-                          <SelectContent>
+700-                            {cookingMethods.map((method) => (
+701-                              <SelectItem key={method} value={method}>
+702-                                {method}
+703-                              </SelectItem>
+704-                            ))}
+705-                          </SelectContent>
+706-                        </Select>
+707-                        <FormMessage />
+708-                      </FormItem>
+709-                    )}
+710-                  />
+711-                  
+712-                  <FormField
+713-                    control={form.control}
+714-                    name={`ingredients.${index}.calories`}
+715-                    render={({ field }) => (
+716-                      <FormItem>
+717-                        <FormLabel className="text-xs">Calories</FormLabel>
+718-                        <FormControl>
+719-                          <Input 
+720-                            type="number" 
+721-                            placeholder="kcal" 
+722-                            {...field}
+723-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+724-                          />
+725-                        </FormControl>
+726-                        <FormMessage />
+727-                      </FormItem>
+728-                    )}
+729-                  />
+730-                </div>
+731-              </div>
+732-            ))}
+733-          </div>
+734-        )}
+735-        
+736-        {inputMethod === "recipe" && (
+737-          <div className="space-y-4 p-3 border rounded-md">
+738-            <h3 className="text-sm font-medium">Recipe Details</h3>
+739-            
+740-            <FormField
+741-              control={form.control}
+742-              name="recipe.name"
+743-              render={({ field }) => (
+744-                <FormItem>
+745-                  <FormLabel className="text-xs">Recipe Name</FormLabel>
+746-                  <FormControl>
+747-                    <Input placeholder="e.g., Chicken Stir Fry" {...field} />
+748-                  </FormControl>
+749-                  <FormMessage />
+750-                </FormItem>
+751-              )}
+752-            />
+753-            
+754-            <div className="grid grid-cols-2 gap-3">
+755-              <FormField
+756-                control={form.control}
+757-                name="recipe.servingSize"
+758-                render={({ field }) => (
+759-                  <FormItem>
+760-                    <FormLabel className="text-xs">Serving Size</FormLabel>
+761-                    <FormControl>
+762-                      <Input placeholder="e.g., 1 cup" {...field} />
+763-                    </FormControl>
+764-                    <FormMessage />
+765-                  </FormItem>
+766-                )}
+767-              />
+768-              
+769-              <FormField
+770-                control={form.control}
+771-                name="recipe.calories"
+772-                render={({ field }) => (
+773-                  <FormItem>
+774-                    <FormLabel className="text-xs">Calories</FormLabel>
+775-                    <FormControl>
+776-                      <Input 
+777-                        type="number" 
+778-                        placeholder="kcal" 
+779-                        {...field}
+780-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+781-                      />
+782-                    </FormControl>
+783-                    <FormMessage />
+784-                  </FormItem>
+785-                )}
+786-              />
+787-            </div>
+788-          </div>
+789-        )}
+790-        
+791-        <DialogFooter>
+792-          <Button type="button" variant="outline" onClick={onClose}>
+793-            Cancel
+794-          </Button>
+795-          <Button type="submit">Update Meal</Button>
+796-        </DialogFooter>
+797-      </form>
+798-    </Form>
+799-  );
+800-};
+801-
+802-// Main meals page component
+803-export default function MealsPage() {
+804-  const { user } = useAuth();
+805-  const [isAddMealOpen, setIsAddMealOpen] = useState(false);
+806-  const [isEditMealOpen, setIsEditMealOpen] = useState(false);
+807-  const [activeTab, setActiveTab] = useState("today");
+808-  const [searchTerm, setSearchTerm] = useState("");
+809-  const [currentMeal, setCurrentMeal] = useState<Meal | null>(null);
+810-  
+811-  // Fetching meals data
+812-  const { 
+813-    data: meals = [], 
+814-    isLoading, 
+815-    error 
+816-  } = useQuery<Meal[]>({
+817-    queryKey: ["/api/meals"],
+818-    queryFn: getQueryFn({ on401: "throw" }),
+--
+919:                {currentMeal && <EditMealForm meal={currentMeal} onClose={() => setIsEditMealOpen(false)} />}
+920-              </DialogContent>
+921-            </Dialog>
+922-          </div>
+923-          
+924-          <div className="mb-6">
+925-            <div className="relative">
+926-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+927-              <Input 
+928-                placeholder="Search meals or ingredients..." 
+929-                className="pl-10"
+930-                value={searchTerm}
+931-                onChange={(e) => setSearchTerm(e.target.value)}
+932-              />
+933-            </div>
+934-          </div>
+935-          
+936-          <Tabs defaultValue="today" value={activeTab} onValueChange={setActiveTab}>
+937-            <TabsList className="grid grid-cols-3 mb-6">
+938-              <TabsTrigger value="today">Today</TabsTrigger>
+939-              <TabsTrigger value="week">This Week</TabsTrigger>
+940-              <TabsTrigger value="history">History</TabsTrigger>
+941-            </TabsList>
+942-            
+943-            <TabsContent value="today" className="space-y-4">
+944-              {isLoading ? (
+945-                <div className="flex justify-center py-10">
+946-                  <Loader2 className="h-10 w-10 animate-spin text-gray-400" />
+947-                </div>
+948-              ) : error ? (
+949-                <div className="flex flex-col items-center py-10 text-center">
+950-                  <AlertCircle className="h-10 w-10 text-red-500 mb-4" />
+951-                  <h3 className="text-lg font-medium">Failed to load meals</h3>
+952-                  <p className="text-gray-500">Please try again later</p>
+953-                </div>
+954-              ) : displayMeals.length === 0 ? (
+955-                <div className="flex flex-col items-center py-10 text-center">
+956-                  <p className="text-gray-500 mb-4">No meals found for today</p>
+957-                  <Button onClick={() => setIsAddMealOpen(true)}>
+958-                    <Plus className="h-4 w-4 mr-2" />
+959-                    Add Your First Meal
+960-                  </Button>
+961-                </div>
+962-              ) : (
+963-                <>
+964-                  <div className="mb-4">
+965-                    <h2 className="text-lg font-medium mb-2">Today's Meals</h2>
+966-                    <div className="grid grid-cols-3 gap-4 mb-4">
+967-                      <Card className="flex flex-col items-center justify-center p-4 text-center">
+968-                        <h3 className="text-sm font-medium text-gray-500">Total Calories</h3>
+969-                        <p className="text-3xl font-bold">{displayMeals.reduce((sum, meal) => sum + meal.calories, 0)}</p>
+970-                        <p className="text-xs text-gray-500">kcal</p>
+971-                      </Card>
+972-                      <Card className="flex flex-col items-center justify-center p-4 text-center">
+973-                        <h3 className="text-sm font-medium text-gray-500">Protein</h3>
+974-                        <p className="text-3xl font-bold">65</p>
+975-                        <p className="text-xs text-gray-500">g</p>
+976-                      </Card>
+977-                      <Card className="flex flex-col items-center justify-center p-4 text-center">
+978-                        <h3 className="text-sm font-medium text-gray-500">Meals</h3>
+979-                        <p className="text-3xl font-bold">{displayMeals.length}</p>
+980-                        <p className="text-xs text-gray-500">today</p>
+981-                      </Card>
+982-                    </div>
+983-                  </div>
+984-                  
+985-                  <div>
+986-                    {displayMeals.map(meal => (
+987-                      <MealItem 
+988-                        key={meal.id} 
+989-                        meal={meal} 
+990-                        onEdit={handleEditMeal}
+991-                        onDelete={handleDeleteMeal}
+992-                      />
+993-                    ))}
+994-                  </div>
+995-                </>
+996-              )}
+997-            </TabsContent>
+998-            
+999-            <TabsContent value="week">
+1000-              <div className="flex flex-col items-center py-10 text-center">
+1001-                <p className="text-gray-500">Weekly meal summary coming soon</p>
+1002-              </div>
+1003-            </TabsContent>
+1004-            
+1005-            <TabsContent value="history">
+1006-              <div className="flex flex-col items-center py-10 text-center">
+1007-                <p className="text-gray-500">Meal history and trends coming soon</p>
+1008-              </div>
+1009-            </TabsContent>
+1010-          </Tabs>
+1011-        </div>
+1012-      </div>
+1013-    </div>
+1014-  );
+1015-}
